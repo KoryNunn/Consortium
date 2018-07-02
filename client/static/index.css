@@ -1,0 +1,89 @@
+html{
+    font-family: Arial;
+    color: #345;
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    margin: 0;
+}
+
+h1, h2, h3{
+    margin: 1em;
+}
+
+button{
+    padding: 0.5em;
+    margin: 0.5em;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 0.2em;
+    box-shadow: 0 3px 10px -1px rgba(0,0,0,0.2), 0 5px 10px -5px rgba(0,0,0,0.2);
+}
+
+input{
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 0.2em;
+    box-shadow: inset 0 3px 10px -1px rgba(0,0,0,0.2), 0 5px 10px -5px rgba(0,0,0,0.2);
+    padding: 0.5em;
+}
+
+form{
+    box-shadow: 0 3px 10px -1px rgba(0,0,0,0.2), 0 5px 10px -5px rgba(0,0,0,0.2);
+    padding: 1em;
+    margin: 1em;
+}
+
+form[disabled] > *{
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+form > div{
+    padding: 0.5em;
+}
+
+form > div > label{
+    margin-right: 1em;
+}
+
+table{
+    width: 100%;
+    border-collapse: collapse;
+}
+
+td{
+    border-bottom: solid 3px rgba(255,255,255,0.5);
+    padding: 0.5em;
+}
+
+tr:last-child td{
+    border-bottom: none;
+}
+
+tr.stopped td{
+    background: rgba(180, 180, 180, 0.3);
+}
+
+tr.running td{
+    background: rgba(180, 255, 180, 0.3);
+}
+
+.processes{
+    font-size: 1.2em;
+}
+
+button.delete{
+    background-color: rgba(220,100,100, 0.8);
+    color: rgba(100,0,0, 1);
+}
+
+.logs{
+    max-width: 94vw;
+    margin: 1em;
+    padding: 1em;
+    box-shadow: inset 0 3px 10px -1px rgba(0,0,0,0.2), 0 5px 10px -5px rgba(0,0,0,0.2);
+    max-height: 400px;
+    overflow: auto;
+}
