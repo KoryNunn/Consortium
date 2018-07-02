@@ -12,7 +12,7 @@ function handle(application, controller){
                 return;
             }
 
-            response.writeHead(200, 'application/json');
+            response.writeHead(200, { 'Content-Type': 'application/json'});
             response.end(JSON.stringify(result));
         }));
     }

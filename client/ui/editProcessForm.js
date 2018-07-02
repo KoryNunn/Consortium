@@ -47,6 +47,15 @@ module.exports = function editProcess(app, title, submitLabel, getNewState, prod
                     onchange: 'value:value'
                 })
             ),
+            fastn('div',
+                fastn('label', 'Is git project'),
+                fastn('input', {
+                    type: 'checkbox',
+                    placeholder: 'environment',
+                    checked: fastn.binding('process.isGit'),
+                    onchange: 'checked:checked'
+                })
+            ),
             fastn('button', submitLabel)
         )
         .on('submit', function(event, scope){

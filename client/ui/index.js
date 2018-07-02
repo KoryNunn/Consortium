@@ -76,6 +76,7 @@ module.exports = function(app){
             fastn('h2', 'Processes'),
             fastn('tr',
                 fastn('td', 'Name'),
+                fastn('td', 'Branch'),
                 fastn('td', 'CWD'),
                 fastn('td', 'Run Command'),
                 fastn('td', 'Build Command'),

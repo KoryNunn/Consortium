@@ -7,7 +7,8 @@ module.exports = function(data, callback){
             cwd: data.cwd,
             runCommand: data.runCommand,
             buildCommand: data.buildCommand,
-            env: data.environment
+            env: data.environment,
+            isGit: data.isGit
         };
     } catch(error) {
         return callback(error);

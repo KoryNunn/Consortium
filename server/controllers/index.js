@@ -1,3 +1,5 @@
+var fs = require('fs');
+var path = require('path');
 var righto = require('righto');
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
@@ -7,29 +9,42 @@ var processSchema = require('../schemas/process');
 var processLogs = {};
 
 function addProcess(tokens, data, callback){
+    var scope = this;
     var validProcess = righto(processSchema, data);
-    var saved = validProcess.get((processesData) => this.application.db.processes.save(processesData));
+    var saved = validProcess.get((processesData) => scope.application.db.processes.save(processesData));
 
     saved(callback);
 }
 
 function updateProcess(tokens, data, callback){
+    var scope = this;
     var validProcess = righto(processSchema, data);
-    var updated = validProcess.get((processesData) => this.application.db.processes.update({ _id: tokens.id }, processesData));
+    var updated = validProcess.get((processesData) => scope.application.db.processes.update({ _id: tokens.id }, processesData));
 
     updated(callback);
 }
 
 function removeProcess(tokens, callback){
-    var removed = righto.sync(() => this.application.db.processes.remove({ _id: tokens.id }));
+    var scope = this;
+    var removed = righto.sync(() => scope.application.db.processes.remove({ _id: tokens.id }));
 
     removed(callback);
 }
 
 function getProcesses(tokens, callback){
-    var processes = righto.sync(() => this.application.db.processes.find());
+    var scope = this;
+    var processes = righto.sync(() => scope.application.db.processes.find());
 
-    processes(callback);
+    var addGitInfo = processes.get(processes => righto.all(processes.map(process => {
+        if(process.isGit){
+            return righto(getGitBranch, scope.application, process._id)
+                .get(branch => ({ ...process, branch }))
+        }
+
+        return process;
+    })));
+
+    addGitInfo(callback);
 }
 
 function killProcess(pid, callback){
@@ -40,6 +55,16 @@ function addProcessLog(processName, data, type){
     processLogs[processName] = processLogs[processName] || [];
     processLogs[processName].push([Date.now(), String(data)]);
     processLogs[processName] = processLogs[processName].slice(-100);
+}
+
+function getGitBranch(application, processId, callback){
+    var process = righto.sync(() => application.db.processes.find({ _id: processId })).get(0);
+    var cwd = process.get('cwd');
+    var gitHEADFile = cwd.get(cwd => path.join(cwd, './.git/HEAD'));
+    var HEADFile = righto(fs.readFile, gitHEADFile, 'utf8');
+    var branch = HEADFile.get(file => file.match(/ref\: refs\/heads\/(.*)/)[1]);
+
+    branch(callback);
 }
 
 function restartProcess(tokens, callback){
@@ -261,6 +286,8 @@ module.exports = function(application){
             });
         }
     }
+
+    recheckProcesses();
 
     return {
         addProcess,

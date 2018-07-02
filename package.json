@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "watchify -d ./client/index.js -o ./client/static/index.browser.js",
     "build": "browserify ./client/index.js > ./client/static/index.browser.js",
-    "start": "node server run"
+    "start": "node server run",
+    "debug": "node --inspect server run"
   },
   "author": "",
   "license": "ISC",

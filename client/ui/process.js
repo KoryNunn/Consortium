@@ -8,6 +8,7 @@ module.exports = function renderProcess(app){
         fastn('td',
             fastn.binding('process.name')
         ),
+        fastn('td', fastn.binding('process.branch')),
         fastn('td', fastn.binding('process.cwd')),
         fastn('td', fastn.binding('process.runCommand')),
         fastn('td', fastn.binding('process.buildCommand')),
