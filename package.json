@@ -21,6 +21,7 @@
     "make-json-request": "^1.0.1",
     "request-data": "^1.2.0",
     "righto": "^5.0.0",
+    "scroll-into-view": "^1.9.3",
     "sea-lion": "^2.0.2",
     "tape": "^4.9.1",
     "wtfnode": "^0.7.0"

@@ -7,54 +7,65 @@ module.exports = function editProcess(app, title, submitLabel, getNewState, prod
                 disabled: fastn.binding('loading')
             },
             fastn('h2', title),
-            fastn('div',
+            fastn('field',
                 fastn('label', 'Name'),
                 fastn('input', {
-                    placeholder: 'name',
+                    placeholder: 'Name',
                     value: fastn.binding('process.name'),
                     onchange: 'value:value'
                 })
             ),
-            fastn('div',
-                fastn('label', 'CWD'),
+            fastn('field',
+                fastn('label', 'Current working directory'),
                 fastn('input', {
-                    placeholder: 'cwd',
+                    placeholder: 'CWD',
                     value: fastn.binding('process.cwd'),
                     onchange: 'value:value'
                 })
             ),
-            fastn('div',
+            fastn('field',
                 fastn('label', 'Run Command'),
                 fastn('input', {
-                    placeholder: 'runCommand',
+                    placeholder: 'Run Command',
                     value: fastn.binding('process.runCommand'),
                     onchange: 'value:value'
                 })
             ),
-            fastn('div',
+            fastn('field',
                 fastn('label', 'Build command'),
                 fastn('input', {
-                    placeholder: 'buildCommand',
+                    placeholder: 'Build command',
                     value: fastn.binding('process.buildCommand'),
                     onchange: 'value:value'
                 })
             ),
-            fastn('div',
+            fastn('field',
                 fastn('label', 'Environment'),
                 fastn('input', {
-                    placeholder: 'environment',
+                    placeholder: 'Environment',
                     value: fastn.binding('process.environment'),
                     onchange: 'value:value'
                 })
             ),
-            fastn('div',
-                fastn('label', 'Is git project'),
+            fastn('field',
                 fastn('input', {
+                    id: 'isGit',
                     type: 'checkbox',
-                    placeholder: 'environment',
+                    placeholder: 'Is git project',
                     checked: fastn.binding('process.isGit'),
                     onchange: 'checked:checked'
-                })
+                }),
+                fastn('label', { for: 'isGit' }, 'Is git project')
+            ),
+            fastn('field',
+                fastn('input', {
+                    id: 'isNodePackage',
+                    type: 'checkbox',
+                    placeholder: 'Is node package',
+                    checked: fastn.binding('process.isNodePackage'),
+                    onchange: 'checked:checked'
+                }),
+                fastn('label', { for: 'isNodePackage' }, 'Is node package')
             ),
             fastn('button', submitLabel)
         )

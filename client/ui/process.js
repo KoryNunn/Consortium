@@ -1,19 +1,21 @@
 var fastn = require('./fastn');
 
 module.exports = function renderProcess(app){
-    return fastn('tr',
+    return fastn('section',
         {
-            class: fastn.binding('process.pid', pid => pid ? 'running': 'stopped')
+            class: fastn.binding('process.pid', pid => [
+                'process',
+                pid ? 'running': 'stopped'
+            ])
         },
-        fastn('td',
+        fastn('h1', { class: 'name' },
             fastn.binding('process.name')
         ),
-        fastn('td', fastn.binding('process.branch')),
-        fastn('td', fastn.binding('process.cwd')),
-        fastn('td', fastn.binding('process.runCommand')),
-        fastn('td', fastn.binding('process.buildCommand')),
-        fastn('td', fastn.binding('process.pid', pid => pid ? 'Running': 'Stopped')),
-        fastn('td',
+        fastn('div', { class: 'info' },
+            fastn('div', { class: 'status' }, fastn.binding('process.pid', pid => pid ? 'Running': 'Stopped')),
+            fastn('div', { class: 'branch' }, fastn.binding('process.branch'))
+        ),
+        fastn('div', { class: 'actions' },
             fastn('button', fastn.binding('process.showSettings', show => show ? 'Hide' : 'Show'), ' settings')
             .on('click', (event, scope) => {
                 app.showHideSettingsForProcess(scope.get('process._id'), !scope.get('process.showSettings'))
@@ -21,12 +23,6 @@ module.exports = function renderProcess(app){
             fastn('button', fastn.binding('process.showLogs', show => show ? 'Hide' : 'Show'), ' logs')
             .on('click', (event, scope) => {
                 app.showHideLogsForProcess(scope.get('process._id'), !scope.get('process.showLogs'))
-            }),
-            fastn('button', 'Rebuild')
-            .on('click', (event, scope) => {
-                app.rebuildProcess(scope.get('process._id'), () => {
-
-                })
             }),
             fastn('button', { display: fastn.binding('process.pid') }, 'Stop')
             .on('click', (event, scope) => {

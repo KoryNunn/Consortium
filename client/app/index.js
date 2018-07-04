@@ -1,10 +1,12 @@
 var cpjax = require('cpjax');
 var righto = require('righto');
 var Enti = require('enti');
+var processSchema = require('../../schemas/process');
 
 module.exports = function(){
 
     var appState = {
+        processes: [],
         processStates: {}
     };
 
@@ -18,7 +20,7 @@ module.exports = function(){
         allKilled(callback);
     }
 
-    function getProcesses(update){
+    function refreshProcesses(){
         var processes = righto(cpjax, {
             dataType: 'json',
             method: 'GET',
@@ -26,9 +28,32 @@ module.exports = function(){
         });
 
         processes(function(error, result){
-            update ?
-                Enti.update(appState, 'processes', result) :
-                Enti.set(appState, 'processes', result);
+            Enti.update(appState, 'processes', result);
+        });
+    }
+
+    function pollProcesses(poll){
+        var url = '/processes';
+
+        if(poll){
+            url += '?poll=true';
+        }
+
+        var processes = righto(cpjax, {
+            dataType: 'json',
+            method: 'GET',
+            url
+        });
+
+        processes(function(error, result){
+            if(error){
+                return setTimeout(() => pollProcesses(true), 1000);
+            }
+            if(Array.isArray(result)){
+                Enti.update(appState, 'processes', result);
+            }
+
+            pollProcesses(true);
         });
     }
 
@@ -48,14 +73,15 @@ module.exports = function(){
     }
 
     function createProcess(process, callback){
-        var created = righto(cpjax, {
+        var validProcess = righto(processSchema, process);
+        var created = righto(cpjax, righto.resolve({
             dataType: 'json',
             method: 'POST',
             url: `/processes`,
-            data: process
-        });
+            data: validProcess
+        }));
 
-        var processListUpdated = created.get(getProcesses);
+        var processListUpdated = created.get(refreshProcesses);
 
         var result = righto.mate(created, righto.after(processListUpdated));
 
@@ -63,14 +89,15 @@ module.exports = function(){
     }
 
     function updateProcess(processId, process, callback){
-        var updated = righto(cpjax, {
+        var validProcess = righto(processSchema, process);
+        var updated = righto(cpjax, righto.resolve({
             dataType: 'json',
             method: 'PUT',
             url: `/processes/${processId}`,
-            data: process
-        });
+            data: validProcess
+        }));
 
-        var processListUpdated = updated.get(getProcesses);
+        var processListUpdated = updated.get(refreshProcesses);
 
         var result = righto.mate(updated, righto.after(processListUpdated));
 
@@ -105,6 +132,16 @@ module.exports = function(){
         });
 
         stopped(callback);
+    }
+
+    function runNodePackageScript(processId, scriptName, callback){
+        var scriptRan = righto(cpjax, {
+            dataType: 'json',
+            method: 'PUT',
+            url: `/processes/${processId}/scripts/${scriptName}`
+        });
+
+        scriptRan(callback);
     }
 
     function getProcessLogs(processId, from, callback){
@@ -158,14 +195,17 @@ module.exports = function(){
                 logs.forEach(function(log){
                     Enti.set(process, 'lastLog', Math.max(Enti.get(process, 'lastLog') || Date.now() - 10e6, log[0]));
                     Enti.push(process, 'logs', log[1]);
+                    while(process.logs.length > 10000){
+                        Enti.delete(process, 'logs.0');
+                    }
                 });
             });
         });
     }
 
-    getProcesses();
+    pollProcesses();
+
     setInterval(() => {
-        getProcesses(true);
         updateProcessLogs();
     }, 500);
 
@@ -178,6 +218,7 @@ module.exports = function(){
         restartProcess,
         rebuildProcess,
         stopProcess,
+        runNodePackageScript,
         getProcessLogs,
         setSelectedProcess,
         showHideLogsForProcess,

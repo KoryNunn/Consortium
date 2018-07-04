@@ -4,14 +4,15 @@ var righto = require('righto');
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var util = require('util');
-var processSchema = require('../schemas/process');
+var processSchema = require('../../schemas/process');
 
 var processLogs = {};
 
 function addProcess(tokens, data, callback){
     var scope = this;
     var validProcess = righto(processSchema, data);
-    var saved = validProcess.get((processesData) => scope.application.db.processes.save(processesData));
+    var saved = validProcess.get((processesData) => scope.application.db.processes.save(processesData))
+        .get(completeProcessChangeHandlers(scope.application));
 
     saved(callback);
 }
@@ -19,29 +20,90 @@ function addProcess(tokens, data, callback){
 function updateProcess(tokens, data, callback){
     var scope = this;
     var validProcess = righto(processSchema, data);
-    var updated = validProcess.get((processesData) => scope.application.db.processes.update({ _id: tokens.id }, processesData));
+    var updated = validProcess.get((processesData) => scope.application.db.processes.update({ _id: tokens.id }, processesData))
+        .get(completeProcessChangeHandlers(scope.application));
 
     updated(callback);
 }
 
 function removeProcess(tokens, callback){
     var scope = this;
-    var removed = righto.sync(() => scope.application.db.processes.remove({ _id: tokens.id }));
+    var removed = righto.sync(() => scope.application.db.processes.remove({ _id: tokens.id }))
+        .get(completeProcessChangeHandlers(scope.application));
 
     removed(callback);
 }
 
+function completeProcessChangeHandlers(application){
+    return function(arg){
+        if(!application.pendingProcessChangeHandlers){
+            return;
+        }
+
+        while(application.pendingProcessChangeHandlers.length) {
+            var handler = application.pendingProcessChangeHandlers.shift();
+            handler(null, application);
+        }
+
+        clearTimeout(application.pendingProcessChangeTimeout);
+
+        return arg;
+    };
+}
+
+function addProcessChangeHandler(scope, handler, callback){
+    var application = scope.application;
+
+    if(!application.pendingProcessChangeHandlers){
+        application.pendingProcessChangeHandlers = [];
+        application.pendingProcessChangeTimeout = setTimeout(function(){
+            while(application.pendingProcessChangeHandlers.length) {
+                var handler = application.pendingProcessChangeHandlers.shift();
+                handler({
+                    code: 202,
+                    message: 'No change, poll again.'
+                });
+            }
+        }, 1000 * 60);
+    }
+
+    application.pendingProcessChangeHandlers.push(function(error, application){
+        if(error){
+            return callback(error);
+        }
+
+        handler(callback);
+    });
+}
+
 function getProcesses(tokens, callback){
     var scope = this;
+
+    if(tokens.queryStringItems.poll){
+        addProcessChangeHandler(scope, function(callback){
+            getProcesses.call(scope, { queryStringItems: {} }, callback);
+        }, callback);
+        return;
+    }
+
     var processes = righto.sync(() => scope.application.db.processes.find());
 
     var addGitInfo = processes.get(processes => righto.all(processes.map(process => {
         if(process.isGit){
-            return righto(getGitBranch, scope.application, process._id)
-                .get(branch => ({ ...process, branch }))
+            process = {
+                ...process,
+                branch: righto(getGitBranch, scope.application, process._id)
+            };
         }
 
-        return process;
+        if(process.isNodePackage){
+            process = {
+                ...process,
+                scripts: righto(getPackageScripts, scope.application, process._id)
+            };
+        }
+
+        return righto.resolve(process);
     })));
 
     addGitInfo(callback);
@@ -60,11 +122,59 @@ function addProcessLog(processName, data, type){
 function getGitBranch(application, processId, callback){
     var process = righto.sync(() => application.db.processes.find({ _id: processId })).get(0);
     var cwd = process.get('cwd');
-    var gitHEADFile = cwd.get(cwd => path.join(cwd, './.git/HEAD'));
-    var HEADFile = righto(fs.readFile, gitHEADFile, 'utf8');
+    var gitHEADFilePath = cwd.get(cwd => path.join(cwd, './.git/HEAD'));
+    var HEADFile = righto(fs.readFile, gitHEADFilePath, 'utf8');
     var branch = HEADFile.get(file => file.match(/ref\: refs\/heads\/(.*)/)[1]);
 
     branch(callback);
+}
+
+function getPackageScripts(application, processId, callback){
+    var process = righto.sync(() => application.db.processes.find({ _id: processId })).get(0);
+    var cwd = process.get('cwd');
+    var packageJsonPath = cwd.get(cwd => path.join(cwd, './package.json'));
+    var packageJson = righto(fs.readFile, packageJsonPath, 'utf8').get(JSON.parse);
+    var scripts = packageJson.get('scripts');
+
+    scripts(callback);
+}
+
+function runProcessScript(process, script, callback){
+    var spawnedProcess;
+    try{
+        spawnedProcess = exec(script, {
+            cwd: process.cwd,
+            detached: true
+        }, function(error){
+            callback(error);
+        });
+
+        spawnedProcess.stdout.on('data', function(data){
+            console.log(process.name + ':', String(data));
+            addProcessLog(process.name, data, 'data');
+        });
+
+        spawnedProcess.stderr.on('data', function(data){
+            console.warn(process.name + ':', String(data));
+            addProcessLog(process.name, data, 'error');
+        });
+    } catch (error){
+        callback(error);
+    }
+}
+
+function runNodePackageScript(tokens, callback){
+    var scope = this;
+    var { id: processId, scriptName } = tokens;
+    var process = righto.sync(() => scope.application.db.processes.find({ _id: processId })).get(0);
+    var cwd = process.get('cwd');
+    var packageJsonPath = cwd.get(cwd => path.join(cwd, './package.json'));
+    var packageJson = righto(fs.readFile, packageJsonPath, 'utf8').get(JSON.parse);
+    var scripts = packageJson.get('scripts');
+    var script = scripts.get(scriptName).get(() => 'npm run ' + scriptName);
+    var scriptRun = righto(runProcessScript, process, script);
+
+    scriptRun(callback);
 }
 
 function restartProcess(tokens, callback){
@@ -115,7 +225,8 @@ function restartProcess(tokens, callback){
         } else {
             run();
         }
-    });
+    })
+    .get(completeProcessChangeHandlers(scope.application));
 
     restarted(callback);
 }
@@ -132,9 +243,11 @@ function rebuildProcess(tokens, callback){
         function run(){
             var spawnedProcess;
             var commandParts = process.buildCommand.split(' ');
+            var outputStream = fs.createWriteStream(path.join(__dirname, '../../data', process.name));
+
             try{
                 spawnedProcess = spawn(commandParts[0], commandParts.slice(1), {
-                    stdio: 'pipe',
+                    stdio: ['ignore', outputStream, outputStream],
                     cwd: process.cwd,
                     detached: true
                 }, function(){
@@ -170,7 +283,8 @@ function rebuildProcess(tokens, callback){
         } else {
             run();
         }
-    });
+    })
+    .get(completeProcessChangeHandlers(scope.application));
 
     restarted(callback);
 }
@@ -196,10 +310,20 @@ function checkProcesses(application, callback){
         });
     })));
 
-    checked(function(error){
+    var notified = checked.get(results => {
+        if(results.some((item) => item)){
+            completeProcessChangeHandlers(application)();
+        }
+    });
+
+    var complete = righto.mate(checked, righto.after(notified));
+
+    complete(function(error){
         if(error){
             console.log(error);
         }
+
+        callback();
     });
 }
 
@@ -218,7 +342,8 @@ function stopProcess(tokens, callback){
 
             return updated;
         }
-    });
+    })
+    .get(completeProcessChangeHandlers(scope.application));
 
     killed(callback);
 }
@@ -298,6 +423,7 @@ module.exports = function(application){
         stopProcess,
         rebuildProcess,
         getProcessLogs,
-        killAllProcesses
+        killAllProcesses,
+        runNodePackageScript
     };
 }

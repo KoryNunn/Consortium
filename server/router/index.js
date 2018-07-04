@@ -1,3 +1,4 @@
+var QueryString = require('querystring');
 var SeaLion = require('sea-lion');
 var Dion = require('dion');
 var requestData = require('request-data');
@@ -5,9 +6,11 @@ var requestData = require('request-data');
 function handle(application, controller){
     return function(request, response, tokens){
         var args = Array.prototype.slice.call(arguments, 2);
+        var querystring = request.url.match(/^.*?\?(.*)/);
+        tokens.queryStringItems = querystring ? QueryString.parse(querystring[1]) : {};
         controller.apply({ request, response, application }, args.concat(function(error, result){
             if(error){
-                response.writeHead(error.code || 500);
+                response.writeHead(error.code > 100 ? error.code : 500);
                 response.end(error.code ? error.message : 'An unknown error occured');
                 return;
             }
@@ -47,10 +50,14 @@ module.exports = function(application, controllers){
         '/processes/`id`/logs/`from` /processes/`id`/logs': {
             GET: handle(application, controllers.getProcessLogs)
         },
+        '/processes/`id`/scripts/`scriptName`': {
+            PUT: handle(application, controllers.runNodePackageScript)
+        },
         '/`path...`': fileServer.serveDirectory('./client/static', {
             '.html': 'text/html',
             '.js': 'application/javascript',
-            '.css': 'text/css'
+            '.css': 'text/css',
+            '.jpg': 'text/css'
         }),
     });
 

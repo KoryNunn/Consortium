@@ -4,7 +4,7 @@ var path = require('path');
 var righto = require('righto');
 var jsonRequest = require('make-json-request');
 var createApplication = require('../../server');
-var nextPort = 8090;
+var nextPort = 8091;
 var nextApplicationId = 0;
 
 function getApplication(){
