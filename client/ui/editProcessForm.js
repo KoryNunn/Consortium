@@ -67,7 +67,9 @@ module.exports = function editProcess(app, title, submitLabel, getNewState, prod
                 }),
                 fastn('label', { for: 'isNodePackage' }, 'Is node package')
             ),
-            fastn('button', submitLabel)
+            fastn('menu',
+                fastn('button', submitLabel)
+            )
         )
         .on('submit', function(event, scope){
             scope.set('loading', true);

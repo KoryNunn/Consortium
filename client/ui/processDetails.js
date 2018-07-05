@@ -5,12 +5,12 @@ var renderProcessLogs = require('./processLogs');
 module.exports = function renderProcessDetails(app){
     var processDetails = fastn('div', { class: 'details' },
         fastn('templater', {
-            data: fastn.binding('process.showSettings'),
+            data: fastn.binding('showSettings'),
             attachTemplates: false,
             template: (model) => model.get('item') ? renderProcessSettings(app) : null
         }),
         fastn('templater', {
-            data: fastn.binding('process.showLogs'),
+            data: fastn.binding('showLogs'),
             attachTemplates: false,
             template: (model) => model.get('item') ? renderProcessLogs(app) : null
         })

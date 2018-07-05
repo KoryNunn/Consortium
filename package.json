@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "watchify -d ./client/index.js -o ./client/static/index.browser.js",
-    "build": "browserify ./client/index.js > ./client/static/index.browser.js",
+    "watch": "rm ./client/static/index.browser.js.gz; watchify -d ./client/index.js -o ./client/static/index.browser.js",
+    "build": "browserify -g uglifyify ./client/index.js > ./client/static/index.browser.js && gzip -fk ./client/static/index.browser.js",
     "start": "node server run",
     "debug": "node --inspect server run"
   },

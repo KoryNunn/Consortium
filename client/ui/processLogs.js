@@ -7,7 +7,7 @@ module.exports = function renderProcessLogs(app){
             class: 'logs'
         },
         fastn('list:code', {
-            items: fastn.binding('process.logs|*'),
+            items: fastn.binding('logs|*'),
             template: () => fastn('div', fastn.binding('item'))
         })
     )

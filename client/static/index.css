@@ -64,7 +64,7 @@ form > field{
     display: inline-block;
     padding: 0.5em;
     margin: 1em;
-    width: 400px;
+    width: 300px;
 }
 
 form > field > label:first-child{
@@ -72,8 +72,18 @@ form > field > label:first-child{
     display: block;
 }
 
-.processes{
+form > menu{
+    flex: 0 0 100%;
+    text-align: right;
+}
+
+form > menu button{
     font-size: 1.2em;
+    padding: 0.5em;
+    min-width: 5em;
+}
+
+.processes{
     display: flex;
     flex-flow: row wrap;
 }
@@ -89,6 +99,7 @@ form > field > label:first-child{
     display: flex;
     flex-flow: row wrap;
     background-color: rgba(242, 240, 235, 0.5);
+    transition: all 0.3s ease-out;
 }
 
 .process.running{
@@ -114,9 +125,9 @@ form > field > label:first-child{
 }
 
 .process .name{
-    font-size: 1.5em;
+    font-size: 1.6em;
     margin: 0.2em;
-    font-weight: 200;
+    font-weight: 300;
     padding-bottom: 0.2em;
     border-bottom: solid 1px #ccc;
     flex: 0 0 100%;
@@ -145,6 +156,24 @@ form > field > label:first-child{
     font-size: 1.2em;
     margin: 0;
     flex: 0 0 auto;
+}
+
+.process > .moduleScripts{
+    margin: 0;
+    text-align: right;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 0.5em;
+    border-top: solid 1px #ccc;
+    overflow-x: auto;
+}
+
+.process > .moduleScripts h2{
+    margin: 0.5em;
+    display: inline-block;
+    font-weight: 300;
 }
 
 button.delete{
