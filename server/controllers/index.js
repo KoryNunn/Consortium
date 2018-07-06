@@ -164,6 +164,10 @@ function runProcessScript(process, script, callback){
 }
 
 function runNodePackageScript(tokens, callback){
+    var baseScripts = {
+        install: 'npm install'
+    };
+
     var scope = this;
     var { id: processId, scriptName } = tokens;
     var process = righto.sync(() => scope.application.db.processes.find({ _id: processId })).get(0);
@@ -171,7 +175,23 @@ function runNodePackageScript(tokens, callback){
     var packageJsonPath = cwd.get(cwd => path.join(cwd, './package.json'));
     var packageJson = righto(fs.readFile, packageJsonPath, 'utf8').get(JSON.parse);
     var scripts = packageJson.get('scripts');
-    var script = scripts.get(scriptName).get(() => 'npm run ' + scriptName);
+    var script = scripts.get(scriptName).get((script) => {
+        var command;
+
+        if(script){
+            command = 'npm run ' + scriptName;
+        }
+
+        if(!script){
+            command = baseScripts[scriptName];
+        }
+
+        if(!command){
+            return righto.fail({ code: 404, message: 'Unknown script: ' + scriptName });
+        }
+
+        return command;
+    });
     var scriptRun = righto(runProcessScript, process, script);
 
     scriptRun(callback);

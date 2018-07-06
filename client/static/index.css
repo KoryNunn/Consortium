@@ -1,3 +1,15 @@
+*::-webkit-scrollbar {
+    width: 5px;
+    height: 8px;
+    background-color: #aaa; /* or add it to the track */
+    border-radius: 5px;
+}
+/* Add a thumb */
+*::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.4);
+    border-radius: 5px;
+}
+
 html{
     font-family: Roboto;
     color: #345;
@@ -25,10 +37,22 @@ button{
     text-transform: uppercase;
     padding: 0.5em;
     margin: 0.5em;
-    background: rgb(82, 110, 130);
+    background: hsl(205, 23%, 42%);
     border: 1px solid rgba(0,0,0,0.2);
     border-radius: 0.2em;
     box-shadow: 0 3px 10px -1px rgba(0,0,0,0.2), 0 5px 10px -5px rgba(0,0,0,0.2);
+    transition: all 0.05s ease-out;
+}
+
+button:hover {
+    cursor: pointer;
+    background: hsl(205, 50%, 52%);
+}
+
+button:active {
+    cursor: pointer;
+    background: hsl(205, 50%, 32%);
+    box-shadow: 0 1px 5px -1px rgba(0,0,0,0.2), 0 2px 5px -5px rgba(0,0,0,0.2);
 }
 
 input{
@@ -99,7 +123,8 @@ form > menu button{
     display: flex;
     flex-flow: row wrap;
     background-color: rgba(242, 240, 235, 0.5);
-    transition: all 0.3s ease-out;
+    transition: background 0.3s ease-out;
+    max-width: -webkit-fill-available;
 }
 
 .process.running{
@@ -159,15 +184,16 @@ form > menu button{
 }
 
 .process > .moduleScripts{
+    flex: 0 0 100%;
     margin: 0;
     text-align: right;
-    display: flex;
-    flex-flow: row wrap;
     justify-content: flex-end;
     align-items: center;
     margin-top: 0.5em;
     border-top: solid 1px #ccc;
     overflow-x: auto;
+    white-space: nowrap;
+
 }
 
 .process > .moduleScripts h2{
