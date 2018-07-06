@@ -1,5 +1,6 @@
 var fastn = require('./fastn');
 var renderProcessDetails = require('./processDetails');
+var renderPackageScripts = require('./packageScripts');
 
 module.exports = function renderProcess(app){
     return fastn('section',
@@ -38,23 +39,7 @@ module.exports = function renderProcess(app){
                 })
             })
         ),
-        fastn('list:menu', {
-            display: fastn.binding('scripts'),
-            class: 'moduleScripts',
-            items: fastn.binding('scripts|*'),
-            template: (model, processScope) => {
-                return fastn('button', fastn.binding('key'))
-                    .on('click', (event, scriptScope) => {
-                        app.runNodePackageScript(
-                            processScope.get('_id'),
-                            scriptScope.get('key'),
-                            () => {}
-                        )
-                    });
-            }
-        },
-            fastn('h2', 'Packge scripts')
-        ),
+        renderPackageScripts(app),
         renderProcessDetails(app)
     );
 };
