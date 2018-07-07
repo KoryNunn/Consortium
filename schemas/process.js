@@ -9,7 +9,8 @@ module.exports = function(data, callback){
             buildCommand: data.buildCommand,
             env: data.environment,
             isGit: data.isGit,
-            isNodePackage: data.isNodePackage
+            isNodePackage: data.isNodePackage,
+            order: data.order
         };
     } catch(error) {
         return callback(error);

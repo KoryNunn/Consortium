@@ -10,6 +10,8 @@ DO NOT EXPOSE IT PUBLICLY.
 
 Basic process manager to make developing a graph of services locally easier.
 
+![A screenshot of consortium, making this alt-text pretty damn pointless](/Screenshot.PNG?raw=true)
+
 ## Usage
 
 Install

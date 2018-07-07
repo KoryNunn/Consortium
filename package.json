@@ -18,6 +18,7 @@
     "dion": "^1.0.2",
     "diskdb": "^0.1.17",
     "fastn": "^2.11.0",
+    "grabetha": "^1.2.1",
     "make-json-request": "^1.0.1",
     "request-data": "^1.2.0",
     "righto": "^5.0.0",

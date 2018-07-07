@@ -1,6 +1,45 @@
 var fastn = require('./fastn');
+var grabetha = require('grabetha');
 var renderProcessDetails = require('./processDetails');
 var renderPackageScripts = require('./packageScripts');
+
+
+function addGrabHanders(app, processComponent){
+    var grabbableStuff = grabetha.grabbable(processComponent.element);
+
+    grabbableStuff
+    .on('grab', function(grab){
+       this.ghost = this.createGhost();
+       this.processId = processComponent.scope().get('_id');
+
+       grab.interaction.originalEvent.preventDefault();
+
+        grab.on('move', function(){
+
+        });
+    })
+    .on('drop', function(position){
+        this.ghost.destroy();
+        this.ghost = null
+    });
+
+    var dropArea = grabetha.droppable(processComponent.element);
+
+    dropArea.on('hover', function(event){
+
+    })
+    .on('drop', function(event){
+        // the same stuff as above is accessable here.
+        var targetProcessId = processComponent.scope().get('_id');
+        var movedProcessId = event.grabbable.processId;
+
+        if(targetProcessId === movedProcessId){
+            return;
+        }
+
+        app.reorderProcesses(targetProcessId, movedProcessId, () => {});
+    });
+}
 
 module.exports = function renderProcess(app){
     return fastn('section',
@@ -41,5 +80,8 @@ module.exports = function renderProcess(app){
         ),
         renderPackageScripts(app),
         renderProcessDetails(app)
-    );
+    )
+    .on('render', function(){
+        addGrabHanders(app, this);
+    });
 };
