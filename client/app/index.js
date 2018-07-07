@@ -81,11 +81,7 @@ module.exports = function(){
             data: validProcess
         }));
 
-        var processListUpdated = created.get(refreshProcesses);
-
-        var result = righto.mate(created, righto.after(processListUpdated));
-
-        result(callback);
+        created(callback);
     }
 
     function updateProcess(processId, process, callback){
@@ -97,11 +93,7 @@ module.exports = function(){
             data: validProcess
         }));
 
-        var processListUpdated = updated.get(refreshProcesses);
-
-        var result = righto.mate(updated, righto.after(processListUpdated));
-
-        result(callback);
+        updated(callback);
     }
 
     function restartProcess(processId, callback){
@@ -178,6 +170,16 @@ module.exports = function(){
         Enti.set(process, 'showSettings', show);
     }
 
+    function reorderProcesses(targetProcessId, movedProcessId, callback){
+        var moved = righto(cpjax, righto.resolve({
+            dataType: 'json',
+            method: 'PUT',
+            url: `/processes/${movedProcessId}/move/${targetProcessId}`
+        }));
+
+        moved(callback);
+    }
+
     function updateProcessLogs(){
         appState.processes && appState.processes.forEach(function(process){
             if(!process.showLogs){
@@ -222,6 +224,7 @@ module.exports = function(){
         getProcessLogs,
         setSelectedProcess,
         showHideLogsForProcess,
-        showHideSettingsForProcess
+        showHideSettingsForProcess,
+        reorderProcesses
     };
 };

@@ -4,13 +4,6 @@ var renderEditProcessForm = require('./editProcessForm');
 
 module.exports = function(app){
     var ui = fastn('div',
-        fastn('h1', 'Consortium'),
-        // fastn('button', {}, 'Kill all processes')
-        // .on('click', (event, scope) => {
-        //     app.killAllProcesses(() => {
-
-        //     });
-        // }),
         renderProcessList(app),
         renderEditProcessForm(app, 'Add new process', 'Add', (scope, callback) => callback({}), (process, callback) => {
             app.createProcess(process, callback);

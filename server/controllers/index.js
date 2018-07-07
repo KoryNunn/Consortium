@@ -422,6 +422,42 @@ function killAllProcesses(tokens, callback){
     killed(callback);
 }
 
+function moveProcess(tokens, callback){
+    var scope = this;
+    var processId = tokens.id;
+    var targetProcessId = tokens.targetProcessId;
+
+    var processes = righto.sync(() => scope.application.db.processes.find({ }));
+
+    var moved = processes.get(function(processes){
+        debugger;
+        var movingProcess = processes.find(process => process._id === processId);
+        var targetProcess = processes.find(process => process._id === targetProcessId);
+        var direction = Math.max(Math.sign(targetProcess.order - movingProcess.order), 0);
+        console.log(direction, movingProcess.order, targetProcess.order);
+        var newOrder = processes
+            .slice()
+            .sort((a, b) => a.order - b.order);
+
+        newOrder.splice(movingProcess.order, 1);
+        newOrder.splice(newOrder.indexOf(targetProcess) + direction, 0, movingProcess);
+
+        var requiredUpdates = newOrder.reduce(function(result, process){
+            var requiredOrder = newOrder.indexOf(process);
+            if(requiredOrder !== process.order){
+                result.push(righto.from(scope.application.db.processes.update({ _id: process._id }, { order: requiredOrder })));
+            }
+
+            return result;
+        }, []);
+
+        return righto.all(requiredUpdates);
+    })
+    .get(completeProcessChangeHandlers(scope.application));
+
+    moved(callback);
+}
+
 module.exports = function(application){
 
     function recheckProcesses(){
@@ -444,6 +480,7 @@ module.exports = function(application){
         rebuildProcess,
         getProcessLogs,
         killAllProcesses,
-        runNodePackageScript
+        runNodePackageScript,
+        moveProcess
     };
 }

@@ -53,6 +53,9 @@ module.exports = function(application, controllers){
         '/processes/`id`/scripts/`scriptName`': {
             PUT: handle(application, controllers.runNodePackageScript)
         },
+        '/processes/`id`/move/`targetProcessId`': {
+            PUT: handle(application, controllers.moveProcess)
+        },
         '/`path...`': fileServer.serveDirectory('./client/static', {
             '.html': 'text/html',
             '.js': 'application/javascript',
