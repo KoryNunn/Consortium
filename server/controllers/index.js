@@ -430,16 +430,14 @@ function moveProcess(tokens, callback){
     var processes = righto.sync(() => scope.application.db.processes.find({ }));
 
     var moved = processes.get(function(processes){
-        debugger;
         var movingProcess = processes.find(process => process._id === processId);
         var targetProcess = processes.find(process => process._id === targetProcessId);
         var direction = Math.max(Math.sign(targetProcess.order - movingProcess.order), 0);
-        console.log(direction, movingProcess.order, targetProcess.order);
         var newOrder = processes
             .slice()
             .sort((a, b) => a.order - b.order);
 
-        newOrder.splice(movingProcess.order, 1);
+        newOrder.splice(newOrder.indexOf(movingProcess), 1);
         newOrder.splice(newOrder.indexOf(targetProcess) + direction, 0, movingProcess);
 
         var requiredUpdates = newOrder.reduce(function(result, process){
