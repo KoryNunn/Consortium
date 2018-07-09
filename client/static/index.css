@@ -131,8 +131,37 @@ form > menu button{
     background-color: rgba(242, 240, 235, 1);
 }
 
+@keyframes moveBackground{
+    0%{
+        background-position: -468px 0
+    }
+    100%{
+        background-position: 468px 0
+    }
+}
+
+.process.starting{
+    background-color: rgba(242, 240, 235, 0.8);
+    background: repeating-linear-gradient(
+        0.375turn,
+        rgba(242, 240, 235, 1),
+        rgba(242, 240, 235, 1) 20px,
+        rgba(242, 240, 235, 0.8) 20px,
+        rgba(242, 240, 235, 0.8) 35px
+    );
+    animation-duration: 100.8s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: moveBackground;
+    animation-timing-function: linear;
+}
+
 .process.running .status{
     color: green;
+}
+
+.process.starting .status{
+    color: orange;
 }
 
 .process.stopped .status{

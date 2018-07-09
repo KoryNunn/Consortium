@@ -11,16 +11,27 @@ var processLogs = {};
 function addProcess(tokens, data, callback){
     var scope = this;
     var validProcess = righto(processSchema, data);
-    var saved = validProcess.get((processesData) => scope.application.db.processes.save(processesData))
+    var count = validProcess.get((processesData) => scope.application.db.processes.count());
+    var saved = righto.sync((processesData, count) => scope.application.db.processes.save({
+            ...processesData,
+            order: count
+        }), validProcess, count)
         .get(completeProcessChangeHandlers(scope.application));
 
     saved(callback);
 }
 
+function updateDbProcess(application, processId, processesData, callback){
+    var updated = righto.from(application.db.processes.update({ _id: processId }, processesData))
+        .get(completeProcessChangeHandlers(application));
+
+    updated(callback);
+}
+
 function updateProcess(tokens, data, callback){
     var scope = this;
     var validProcess = righto(processSchema, data);
-    var updated = validProcess.get((processesData) => scope.application.db.processes.update({ _id: tokens.id }, processesData))
+    var updated = righto(updateDbProcess, scope.application, tokens.id, validProcess)
         .get(completeProcessChangeHandlers(scope.application));
 
     updated(callback);
@@ -219,8 +230,26 @@ function restartProcess(tokens, callback){
                 return righto.fail(error);
             }
 
+            var matchUp = new RegExp(process.upMatch || '.');
+            var isUp;
+
+            spawnedProcess.on('error', function(error){
+                console.log(process.name + ':', String(error));
+                addProcessLog(process.name, error, 'error');
+            });
 
             spawnedProcess.stdout.on('data', function(data){
+                if(!isUp){
+                    isUp = String(data).match(matchUp);
+
+                    if(isUp){
+                        var setUpStatus = righto(updateDbProcess, scope.application, processId, {
+                            status: 'running'
+                        });
+
+                        setUpStatus(console.log);
+                    }
+                }
                 console.log(process.name + ':', String(data));
                 addProcessLog(process.name, data, 'data');
             });
@@ -230,21 +259,18 @@ function restartProcess(tokens, callback){
                 addProcessLog(process.name, data, 'error');
             });
 
-            scope.application.db.processes.update({ _id: processId }, {
-                pid: spawnedProcess.pid
+            return righto(updateDbProcess, scope.application, processId, {
+                pid: spawnedProcess.pid,
+                status: 'starting',
             });
         }
-        if(process.pid){
-            killProcess(process.pid, () => {
-                scope.application.db.processes.update({ _id: processId }, {
-                    pid: null
-                });
 
-                run();
-            });
-        } else {
-            run();
+        if(process.pid){
+            return righto(stopProcess, scope, processId)
+                .get(run);
         }
+
+        return run();
     })
     .get(completeProcessChangeHandlers(scope.application));
 
@@ -293,15 +319,10 @@ function rebuildProcess(tokens, callback){
         }
 
         if(process.pid){
-            killProcess(process.pid, () => {
-                scope.application.db.processes.update({ _id: processId }, {
-                    pid: null
-                });
-
-                run();
-            });
+            return righto(stopProcess, scope.application, processId)
+                .get(run);
         } else {
-            run();
+            return run();
         }
     })
     .get(completeProcessChangeHandlers(scope.application));
@@ -323,9 +344,15 @@ function checkProcesses(application, callback){
 
         return runningPid.get(function(currentPid){
             if(currentPid !== pid) {
-                return application.db.processes.update({ _id: process._id }, {
+                var updatedState = {
                     pid: currentPid
-                });
+                };
+
+                if(!pid){
+                    updatedState.status = 'stopped';
+                }
+
+                return righto(updateDbProcess, application, process._id, updatedState);
             }
         });
     })));
@@ -347,25 +374,27 @@ function checkProcesses(application, callback){
     });
 }
 
-function stopProcess(tokens, callback){
-    var scope = this;
-    var processId = tokens.id;
-    var processes = righto.sync(() => scope.application.db.processes.find({ _id: processId }));
+function stopProcess(application, processId, callback){
+    var processes = righto.sync(() => application.db.processes.find({ _id: processId }));
     var process = processes.get(0);
 
     var killed = process.get((process) => {
         if(process.pid){
             var killed = righto(killProcess, process.pid);
-            var updated = killed.get(() => scope.application.db.processes.update({ _id: processId }, {
+            var updated = righto(updateDbProcess, application, processId, {
+                status: 'stopped',
                 pid: null
-            }));
+            });
 
             return updated;
         }
-    })
-    .get(completeProcessChangeHandlers(scope.application));
+    });
 
     killed(callback);
+}
+
+function handleStopProcess(tokens, callback){
+    stopProcess(this.application, tokens.id, callback);
 }
 
 function getProcessLogs(tokens, callback){
@@ -474,7 +503,7 @@ module.exports = function(application){
         removeProcess,
         getProcesses,
         restartProcess,
-        stopProcess,
+        stopProcess: handleStopProcess,
         rebuildProcess,
         getProcessLogs,
         killAllProcesses,
