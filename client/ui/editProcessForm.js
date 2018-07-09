@@ -32,6 +32,14 @@ module.exports = function editProcess(app, title, submitLabel, getNewState, prod
                 })
             ),
             fastn('field',
+                fastn('label', 'Up match'),
+                fastn('input', {
+                    placeholder: 'Up match',
+                    value: fastn.binding('process.upMatch'),
+                    onchange: 'value:value'
+                })
+            ),
+            fastn('field',
                 fastn('label', 'Build command'),
                 fastn('input', {
                     placeholder: 'Build command',

@@ -3,7 +3,6 @@ var grabetha = require('grabetha');
 var renderProcessDetails = require('./processDetails');
 var renderPackageScripts = require('./packageScripts');
 
-
 function addGrabHanders(app, processComponent){
     var grabbableStuff = grabetha.grabbable(processComponent.element);
 
@@ -42,18 +41,23 @@ function addGrabHanders(app, processComponent){
 }
 
 module.exports = function renderProcess(app){
+
+    var statusBinding = fastn.binding('pid', 'status', 'upMatch', (pid, status, upMatch) =>
+        upMatch ? status : pid ? 'running': 'stopped'
+    );
+
     return fastn('section',
         {
-            class: fastn.binding('pid', pid => [
+            class: fastn.binding(statusBinding, (status) => [
                 'process',
-                pid ? 'running': 'stopped'
+                status
             ])
         },
         fastn('h1', { class: 'name' },
             fastn.binding('name')
         ),
         fastn('div', { class: 'info' },
-            fastn('div', { class: 'status' }, fastn.binding('pid', pid => pid ? 'Running': 'Stopped')),
+            fastn('div', { class: 'status' }, statusBinding),
             fastn('div', { class: 'branch' }, fastn.binding('branch'))
         ),
         fastn('div', { class: 'actions' },
