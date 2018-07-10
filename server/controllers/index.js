@@ -216,6 +216,10 @@ function runNodePackageScript(tokens, callback){
     scriptRun(callback);
 }
 
+function getProcessLogFilePath(process){
+    return path.join(__dirname, '../../data', process.name.split(/\s/).join('_') + '.log');
+}
+
 function restartProcess(tokens, callback){
     var scope = this;
     var processId = tokens.id;
@@ -225,8 +229,9 @@ function restartProcess(tokens, callback){
     var restarted = process.get((process) => {
         function run(){
             var spawnedProcess;
+            var processOutputPath = getProcessLogFilePath(process);
             try{
-                spawnedProcess = spawn('sh', ['-c', process.runCommand], {
+                spawnedProcess = spawn('sh', ['-c', process.runCommand + ' 2>&1 | while IFS= read -r line; do echo "$(date +%s%N | cut -b1-13) $line"; done | tee -a ' + processOutputPath], {
                     cwd: process.cwd,
                     detached: true
                 }, function(){
@@ -280,8 +285,6 @@ function restartProcess(tokens, callback){
 
     restarted(callback);
 }
-
-
 
 function rebuildProcess(tokens, callback){
     var scope = this;
@@ -407,19 +410,16 @@ function getProcessLogs(tokens, callback){
     var fromTimestamp = Number(tokens.from) || 100;
     var processes = righto.sync(() => scope.application.db.processes.find({ _id: processId }));
     var process = processes.get(0);
-
-    var logs = process.get((process) => {
-        if(!process){
-            return;
-        }
-
-        var logs = processLogs[process.name] || [];
+    var processLogFilePath = righto.sync(getProcessLogFilePath, process);
+    var logs = righto(fs.readFile, processLogFilePath, 'utf8');
+    var lines = logs.get((logs) => {
+        var logs = logs.trim().split(/\n/);
         var results = [];
         var lastIndex = logs.length-1;
         var lastLog = null;
 
         while(lastIndex >= 0 && (!lastLog || lastLog[0] > fromTimestamp)){
-            lastLog = logs[lastIndex--];
+            lastLog = Array.prototype.slice.call(logs[lastIndex--].match(/^(\d+)(?:\s(.*))?/), 1);
 
             if(lastLog[0] > fromTimestamp){
                 results.push(lastLog);
@@ -429,7 +429,7 @@ function getProcessLogs(tokens, callback){
         return results;
     });
 
-    logs(callback);
+    lines(callback);
 }
 
 function killAllProcesses(tokens, callback){
@@ -491,15 +491,22 @@ function moveProcess(tokens, callback){
 
 module.exports = function(application){
 
+    var processCheckTimeout;
+
     function recheckProcesses(){
         if(!application.closed){
             checkProcesses(application, function(){
-                setTimeout(recheckProcesses, 500);
+                processCheckTimeout = setTimeout(recheckProcesses, 500);
             });
         }
     }
 
     recheckProcesses();
+
+    application.on('close', function(){
+        clearTimeout(processCheckTimeout);
+        clearTimeout(application.pendingProcessChangeTimeout);
+    });
 
     return {
         addProcess,
