@@ -82,7 +82,7 @@ module.exports = function editProcess(app, title, submitLabel, getNewState, prod
         .on('submit', function(event, scope){
             scope.set('loading', true);
             event.preventDefault();
-            produceProcess(scope.get('process'), () => attachNewState(scope.get('.')));
+            produceProcess(scope.get('process'), () => attachNewState(scope.get('process')));
         })
     )
     .on('attach', function(scope){

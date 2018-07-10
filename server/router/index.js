@@ -15,7 +15,10 @@ function handle(application, controller){
                 return;
             }
 
-            response.writeHead(200, { 'Content-Type': 'application/json'});
+            response.writeHead(200, {
+                'Content-Type': 'application/json',
+                'Timestamp': Date.now()
+            });
             response.end(JSON.stringify(result));
         }));
     }
