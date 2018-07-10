@@ -146,8 +146,8 @@ form > menu button{
         0.375turn,
         rgba(242, 240, 235, 1),
         rgba(242, 240, 235, 1) 20px,
-        rgba(242, 240, 235, 0.8) 20px,
-        rgba(242, 240, 235, 0.8) 35px
+        rgba(242, 240, 235, 0.8) 17px,
+        rgba(242, 240, 235, 0.8) 43px
     );
     animation-duration: 100.8s;
     animation-fill-mode: forwards;

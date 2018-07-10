@@ -32,11 +32,19 @@ module.exports = function(){
         });
     }
 
-    function pollProcesses(poll){
+    function parseHeaders(headersString){
+        return headersString.trim().split(/\n/).reduce(function(results, line){
+            var parts = line.match(/(.*?)\: (.*)/);
+            results[parts[1]] = parts[2];
+            return results;
+        }, {});
+    }
+
+    function pollProcesses(lastResponseTime){
         var url = '/processes';
 
-        if(poll){
-            url += '?poll=true';
+        if(lastResponseTime){
+            url += `?poll=${lastResponseTime}`;
         }
 
         var processes = righto(cpjax, {
@@ -45,15 +53,18 @@ module.exports = function(){
             url
         });
 
-        processes(function(error, result){
+        processes(function(error, result, event){
             if(error){
                 return setTimeout(() => pollProcesses(true), 1000);
             }
+
             if(Array.isArray(result)){
                 Enti.update(appState, 'processes', result);
             }
 
-            pollProcesses(true);
+            var headers = parseHeaders(event.target.getAllResponseHeaders());
+
+            pollProcesses(Number(headers.timestamp) || Date.now() - 100);
         });
     }
 
