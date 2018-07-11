@@ -61,21 +61,42 @@ module.exports = function renderProcess(app){
             fastn('div', { class: 'branch' }, fastn.binding('branch'))
         ),
         fastn('div', { class: 'actions' },
-            fastn('button', fastn.binding('showSettings', show => show ? 'Hide' : 'Show'), ' settings')
+            fastn('button', {
+                    class: fastn.binding('showSettings', show => ['icon', show && 'toggleOn']),
+                    title: fastn.binding('showSettings', show => (show ? 'Hide' : 'Show') + ' settings')
+                },
+                fastn('icon', { name: 'settings' })
+            )
             .on('click', (event, scope) => {
                 app.showHideSettingsForProcess(scope.get('_id'), !scope.get('showSettings'))
             }),
-            fastn('button', fastn.binding('showLogs', show => show ? 'Hide' : 'Show'), ' logs')
+            fastn('button', {
+                    class: fastn.binding('showLogs', show => ['icon', show && 'toggleOn']),
+                    title: fastn.binding('showLogs', show => (show ? 'Hide' : 'Show') + ' logs'),
+                },
+                fastn('icon', { name: 'terminal' })
+            )
             .on('click', (event, scope) => {
                 app.showHideLogsForProcess(scope.get('_id'), !scope.get('showLogs'))
             }),
-            fastn('button', { display: fastn.binding('pid') }, 'Stop')
+            fastn('button', {
+                    display: fastn.binding('pid'),
+                    class: 'icon',
+                    title: 'Stop'
+                },
+                fastn('icon', { name: 'stop' })
+            )
             .on('click', (event, scope) => {
                 app.stopProcess(scope.get('_id'), () => {
 
                 })
             }),
-            fastn('button', fastn.binding('pid', running => running ? 'Restart' : 'Start'))
+            fastn('button', {
+                    title: fastn.binding('pid', running => running ? 'Restart' : 'Start'),
+                    class: 'icon'
+                },
+                fastn('icon', { name: fastn.binding('pid', running => running ? 'restart' : 'start') })
+            )
             .on('click', (event, scope) => {
                 app.restartProcess(scope.get('_id'), () => {
 

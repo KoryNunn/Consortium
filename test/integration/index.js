@@ -1,3 +1,4 @@
+// require('wtfnode').init();
 var tape = require('tape');
 var righto = require('righto');
 righto._debug = true;
