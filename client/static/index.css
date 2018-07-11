@@ -55,6 +55,32 @@ button:active {
     box-shadow: 0 1px 5px -1px rgba(0,0,0,0.2), 0 2px 5px -5px rgba(0,0,0,0.2);
 }
 
+button.icon{
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
+button.icon.toggleOn{
+    -webkit-filter: drop-shadow( 0 0 5px black );
+    filter: drop-shadow( 0 0 5px black );
+}
+
+button.icon.toggleOn path:not([fill]){
+    fill: white !important;
+    /*stroke: white !important;*/
+}
+
+svg{
+    height: 30px;
+    width: 30px;
+}
+
+button path:not([fill]){
+    fill: #333 !important;
+    stroke: #333 !important;
+}
+
 input{
     border-radius: 0;
     background: transparent;
@@ -118,8 +144,7 @@ form > menu button{
     box-shadow: 0 3px 10px -1px rgba(0,0,0,0.2), 0 5px 10px -5px rgba(0,0,0,0.2);
     margin: 1em;
     padding: 1em;
-    flex: 1 1 600px;
-    max-width: 100vw;
+    flex: 1 1 40%;
     display: flex;
     flex-flow: row wrap;
     background-color: rgba(242, 240, 235, 0.5);
@@ -184,7 +209,7 @@ form > menu button{
     font-weight: 300;
     padding-bottom: 0.2em;
     border-bottom: solid 1px #ccc;
-    flex: 0 0 100%;
+    flex: 1 1 100%;
 }
 
 .process .branch{
@@ -256,6 +281,8 @@ button.delete{
     flex-flow: row;
     justify-content: stretch;
     max-height: 680px;
+    max-width: : 100%;
+    margin-top: 1em;
 }
 
 .details > * {

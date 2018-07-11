@@ -63,7 +63,8 @@ module.exports = function(application, controllers){
             '.html': 'text/html',
             '.js': 'application/javascript',
             '.css': 'text/css',
-            '.jpg': 'text/css'
+            '.jpg': 'image/jpg',
+            '.svg': 'image/svg'
         }),
     });
 

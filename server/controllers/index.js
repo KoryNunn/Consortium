@@ -413,8 +413,13 @@ function getProcessLogs(tokens, callback){
     var processLogFilePath = righto.sync(getProcessLogFilePath, process);
     var logs = righto(fs.readFile, processLogFilePath, 'utf8');
     var lines = logs.get((logs) => {
-        var logs = logs.trim().split(/\n/);
         var results = [];
+
+        if(!logs.length){
+            return results;
+        }
+
+        var logs = logs.trim().split(/\n/);
         var lastIndex = logs.length-1;
         var lastLog = null;
 
